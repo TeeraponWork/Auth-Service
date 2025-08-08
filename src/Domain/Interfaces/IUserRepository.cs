@@ -4,6 +4,6 @@ namespace Domain.Interfaces
 {
     public interface IUserRepository
     {
-        User? GetUserByUsername(string username);
+        Task<User?> GetByUsernameAsync(string username);
     }
 }

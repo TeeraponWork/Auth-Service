@@ -16,19 +16,19 @@ namespace Infrastructure.Repositories
             {
                 Id = Guid.NewGuid(),
                 Username = "admin",
-                Password = "password" // ⚠️ plaintext password (สำหรับเท่านั้น!)
+                PasswordHash = "password"
             },
             new User
             {
                 Id = Guid.NewGuid(),
                 Username = "test",
-                Password = "123456"
+                PasswordHash = "123456"
             }
         };
-
-        public User? GetUserByUsername(string username)
+        public Task<User?> GetByUsernameAsync(string username)
         {
-            return _users.FirstOrDefault(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+            var user = _users.FirstOrDefault(u => u.Username == username);
+            return Task.FromResult(user);
         }
     }
 }

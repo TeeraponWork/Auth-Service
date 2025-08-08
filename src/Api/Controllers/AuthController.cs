@@ -1,26 +1,32 @@
-using Application.UseCases.Login;
+using Application.Auth.Commands;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Api.Controllers;
-
-[ApiController]
-[Route("api/[controller]")]
-public class AuthController : ControllerBase
+namespace Api.Controllers
 {
-    private readonly LoginHandler _loginHandler;
-
-    public AuthController(LoginHandler loginHandler)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class AuthController : ControllerBase
     {
-        _loginHandler = loginHandler;
-    }
+        private readonly IMediator _mediator;
 
-    [HttpPost("login")]
-    public IActionResult Login([FromBody] LoginRequest request)
-    {
-        var token = _loginHandler.Handle(request);
-        if (token == null)
-            return Unauthorized(new { message = "Invalid credentials" });
+        public AuthController(IMediator mediator)
+        {
+            _mediator = mediator;
+        }
 
-        return Ok(new { token });
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginCommand command)
+        {
+            try
+            {
+                var response = await _mediator.Send(command);
+                return Ok(response);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized(new { message = "Invalid credentials" });
+            }
+        }
     }
 }
