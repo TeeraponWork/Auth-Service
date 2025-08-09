@@ -4,34 +4,31 @@ using MediatR;
 
 namespace Application.Auth.Handlers
 {
-    public class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
+    public sealed class LoginHandler : IRequestHandler<LoginCommand, LoginResponse>
     {
-        private readonly IUserRepository _userRepository;
-        private readonly IJwtTokenGenerator _tokenGenerator;
+        private readonly IUserRepository _users;
+        private readonly IJwtTokenGenerator _jwt;
+        private readonly IPasswordHasher _hasher;
 
-        public LoginHandler(IUserRepository userRepository, IJwtTokenGenerator tokenGenerator)
+        public LoginHandler(IUserRepository users, IJwtTokenGenerator jwt, IPasswordHasher hasher)
         {
-            _userRepository = userRepository;
-            _tokenGenerator = tokenGenerator;
+            _users = users;
+            _jwt = jwt;
+            _hasher = hasher;
         }
 
-        public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
+        public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken ct)
         {
-            var user = await _userRepository.GetByUsernameAsync(request.Username);
+            var user = await _users.GetByEmailAsync(request.Email, ct);
+            if (user is null || !user.IsActive) throw new UnauthorizedAccessException("Invalid credentials.");
 
-            if (user == null || user.PasswordHash != request.Password)
-            {
-                throw new UnauthorizedAccessException("Invalid credentials");
-            }
+            if (!_hasher.Verify(request.Password, user.PasswordHash))
+                throw new UnauthorizedAccessException("Invalid credentials.");
 
-            var token = _tokenGenerator.GenerateToken(user.Id, user.Username);
+            var access = _jwt.CreateToken(user, roles: null, minutes: 30);
+            var refreshPlain = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
 
-            return new LoginResponse
-            {
-                UserId = user.Id,
-                Username = user.Username,
-                Token = token
-            };
+            return new LoginResponse { AccessToken = access, RefreshToken = refreshPlain };
         }
     }
 }

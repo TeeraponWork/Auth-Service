@@ -1,9 +1,6 @@
 using Application.Auth.Commands;
-using Domain.Interfaces;
-using Infrastructure.Repositories;
-using Infrastructure.Security;
-using MediatR;
-using System.Reflection;
+using Infrastructure.Dependencies;
+using Application.Dependencies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,8 +22,10 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddScoped<IUserRepository, MockUserRepository>(); // หรือ UserRepository ตามจริง
-builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+//builder.Services.AddScoped<IUserRepository, MockUserRepository>(); // หรือ UserRepository ตามจริง
+//builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 

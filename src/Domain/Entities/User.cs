@@ -3,8 +3,11 @@
     public class User
     {
         public Guid Id { get; set; }
-        public string Username { get; set; } = string.Empty;
-        public string PasswordHash { get; set; } = string.Empty;
-        public string Role { get; set; } = "User";
+        public string Email { get; set; } = default!;
+        public string PasswordHash { get; set; } = default!;
+        public string? DisplayName { get; set; }
+        public bool IsActive { get; set; } = true;
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
     }
 }

@@ -10,25 +10,15 @@ namespace Infrastructure.Repositories
 {
     public class MockUserRepository : IUserRepository
     {
-        private readonly List<User> _users = new()
-        {
-            new User
-            {
-                Id = Guid.NewGuid(),
-                Username = "admin",
-                PasswordHash = "password"
-            },
-            new User
-            {
-                Id = Guid.NewGuid(),
-                Username = "test",
-                PasswordHash = "123456"
-            }
-        };
-        public Task<User?> GetByUsernameAsync(string username)
-        {
-            var user = _users.FirstOrDefault(u => u.Username == username);
-            return Task.FromResult(user);
-        }
+        private readonly List<User> _users = new();
+
+        public Task<User?> GetByEmailAsync(string email, CancellationToken ct = default) =>
+            Task.FromResult(_users.SingleOrDefault(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase)));
+
+        public Task AddAsync(User user, CancellationToken ct = default)
+        { _users.Add(user); return Task.CompletedTask; }
+
+        public Task<bool> EmailExistsAsync(string email, CancellationToken ct = default) =>
+            Task.FromResult(_users.Any(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase)));
     }
 }

@@ -1,20 +1,24 @@
 ﻿using Domain.Entities;
 using Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
     public class UserRepository : IUserRepository
     {
-        private static readonly List<User> Users = new()
-    {
-        new User { Id = Guid.NewGuid(), Username = "admin", PasswordHash = "admin123" },
-        new User { Id = Guid.NewGuid(), Username = "user", PasswordHash = "user123" }
-    };
+        private readonly AuthDbContext _db;
+        public UserRepository(AuthDbContext db) => _db = db;
 
-        public Task<User?> GetByUsernameAsync(string username)
+        public Task<User?> GetByEmailAsync(string email, CancellationToken ct = default) =>
+            _db.Users.AsNoTracking().SingleOrDefaultAsync(u => u.Email == email, ct);
+
+        public async Task AddAsync(User user, CancellationToken ct = default)
         {
-            var user = Users.FirstOrDefault(u => u.Username == username);
-            return Task.FromResult(user);
+            _db.Users.Add(user);
+            await _db.SaveChangesAsync(ct);
         }
+
+        public Task<bool> EmailExistsAsync(string email, CancellationToken ct = default) =>
+            _db.Users.AsNoTracking().AnyAsync(u => u.Email == email, ct);
     }
 }

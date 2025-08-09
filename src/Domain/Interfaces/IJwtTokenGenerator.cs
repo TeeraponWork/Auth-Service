@@ -4,6 +4,6 @@ namespace Domain.Interfaces
 {
     public interface IJwtTokenGenerator
     {
-        string GenerateToken(Guid userId, string username);
+        string CreateToken(User user, IEnumerable<string>? roles = null, int minutes = 30);
     }
 }
