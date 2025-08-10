@@ -1,0 +1,13 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.idea/
+**/.vscode/
+**/node_modules/
+*.user
+*.suo
+*.swp
+*.log
+.env
+Dockerfile*
+docker-compose*.yml

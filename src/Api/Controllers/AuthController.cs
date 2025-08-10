@@ -14,6 +14,12 @@ namespace Api.Controllers
         private readonly IMediator _mediator;
         public AuthController(IMediator mediator) => _mediator = mediator;
 
+        [HttpGet("test")]
+        public async Task<IActionResult> Test()
+        {
+            return Ok("ok");
+        }
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginCommand cmd)
         {

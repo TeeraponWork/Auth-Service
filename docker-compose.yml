@@ -1,0 +1,15 @@
+name: authservice
+services:
+  api:
+    build:
+      context: .                 # โฟลเดอร์เดียวกับ Dockerfile
+      dockerfile: ./Dockerfile   # แก้ path ถ้าไฟล์อยู่ที่อื่น
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"           # เปิด Swagger ง่าย ๆ
+      ASPNETCORE_URLS: "http://+:8080"
+      # ชี้ไปยัง Postgres ที่คุณใช้อยู่กับ VS/pgAdmin4 (นอก Docker)
+      # แทนที่ <DB_NAME>, <DB_USER>, <DB_PASS> ให้ตรงกับของคุณ
+      ConnectionStrings__AuthDb: "Host=host.docker.internal;Port=5432;Database=authdb;Username=postgres;Password=P@ssw0rd;Include Error Detail=true"
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
