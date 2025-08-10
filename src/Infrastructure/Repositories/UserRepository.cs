@@ -9,9 +9,13 @@ namespace Infrastructure.Repositories
         private readonly AuthDbContext _db;
         public UserRepository(AuthDbContext db) => _db = db;
 
-        public Task<User?> GetByEmailAsync(string email, CancellationToken ct = default) =>
-            _db.Users.AsNoTracking().SingleOrDefaultAsync(u => u.Email == email, ct);
-
+        public Task<User?> GetByEmailAsync(string email, CancellationToken ct = default) {
+            return _db.Users.AsNoTracking().SingleOrDefaultAsync(u => u.Email == email, ct);
+        }
+        public Task<User?> GetByIdAsync(Guid id, CancellationToken ct = default)
+        {
+            return _db.Users.AsNoTracking().SingleOrDefaultAsync(u => u.Id == id, ct);
+        }
         public async Task AddAsync(User user, CancellationToken ct = default)
         {
             _db.Users.Add(user);

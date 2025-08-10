@@ -12,14 +12,15 @@ namespace Infrastructure.Dependencies
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration cfg, bool useMockRepo = false)
         {
             services.AddDbContext<AuthDbContext>(opt =>
-                opt.UseNpgsql(cfg.GetConnectionString("AuthDb")));
+                opt.UseNpgsql(cfg.GetConnectionString("AuthDb"))
+                   .UseSnakeCaseNamingConvention()
+            );
 
-            if (useMockRepo)
-                services.AddSingleton<IUserRepository, MockUserRepository>();
-            else
-                services.AddScoped<IUserRepository, UserRepository>();
-
+            services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+            services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
+            services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+
             return services;
         }
     }
