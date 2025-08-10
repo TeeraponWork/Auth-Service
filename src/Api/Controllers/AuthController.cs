@@ -1,10 +1,7 @@
 using Api.BaseController;
-using Application.Auth;
 using Application.Auth.Commands;
-using Application.Common.Results;
 using Asp.Versioning;
 using MediatR;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
@@ -25,14 +22,53 @@ namespace Api.Controllers
                 var result = await _mediator.Send(cmd);
                 return HandleResponse(result);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
+            {
+                return HandleErrorResponse(ex.Message);
+            }
+        }
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout([FromBody] LogoutCommand cmd)
+        {
+            try
+            {
+                var result = await _mediator.Send(cmd);
+                return HandleResponse(result);
+            }
+            catch (Exception ex)
             {
                 return HandleErrorResponse(ex.Message);
             }
         }
 
         [HttpPost("refresh")]
-        public Task<Result<LoginResponse>> Refresh([FromBody] RefreshCommand body, CancellationToken ct)
-        => _mediator.Send(new RefreshCommand(body.UserId, body.RefreshToken), ct);
+        public async Task<IActionResult> Refresh([FromBody] RefreshCommand body, CancellationToken ct)
+        {
+            try
+            {
+                var result = await _mediator.Send(new RefreshCommand(body.UserId, body.RefreshToken), ct);
+                return HandleResponse(result);
+            }
+            catch (Exception ex)
+            {
+                return HandleErrorResponse(ex.Message);
+            }
+        }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterCommand body, CancellationToken ct)
+        {
+            try
+            {
+                var result = await _mediator.Send(new RegisterCommand
+                    (body.Email,body.Password,body.FirstName,body.LastName,body.Gender
+                    ), ct);
+                return HandleResponse(result);
+            }
+            catch (Exception ex)
+            {
+                return HandleErrorResponse(ex.Message);
+            }
+        }
     }
 }

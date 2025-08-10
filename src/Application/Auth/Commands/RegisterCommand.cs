@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+﻿using Domain.Enums;
 using MediatR;
 
 namespace Application.Auth.Commands
@@ -6,6 +6,8 @@ namespace Application.Auth.Commands
     public sealed record RegisterCommand(
     string Email,
     string Password,
-    string? DisplayName
+    string? FirstName,
+    string? LastName,
+    Gender Gender
     ) : IRequest<RegisterResponse>;
 }

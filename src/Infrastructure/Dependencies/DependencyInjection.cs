@@ -20,6 +20,8 @@ namespace Infrastructure.Dependencies
             services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
             services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+            services.AddScoped<IRolesRepository, RolesRepository>();
+            services.AddScoped<IUserRolesRepository, UserRolesRepository>();
 
             return services;
         }

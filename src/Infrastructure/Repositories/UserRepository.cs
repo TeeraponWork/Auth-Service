@@ -24,5 +24,14 @@ namespace Infrastructure.Repositories
 
         public Task<bool> EmailExistsAsync(string email, CancellationToken ct = default) =>
             _db.Users.AsNoTracking().AnyAsync(u => u.Email == email, ct);
+
+        public async Task UpdateAsync(User user, CancellationToken ct = default)
+        {
+            var users = await _db.Users.Where(t => t.Id == user.Id).FirstOrDefaultAsync();
+            user.CreatedBy = users.Id;
+            user.UpdatedBy = users.Id;
+
+            await _db.SaveChangesAsync(ct);
+        }
     }
 }

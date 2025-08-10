@@ -9,38 +9,68 @@ namespace Application.Auth.Handlers
     {
         private readonly IUserRepository _users;
         private readonly IPasswordHasher _hasher;
-        public RegisterHandler(IUserRepository users, IPasswordHasher hasher)
+        private readonly IRolesRepository _roles;
+        private readonly IUserRolesRepository _userRoles;
+        public RegisterHandler(
+            IUserRepository users, 
+            IPasswordHasher hasher, 
+            IRolesRepository roles,
+            IUserRolesRepository userRoles)
         {
             _users = users;
             _hasher = hasher;
+            _roles = roles;
+            _userRoles = userRoles;
         }
 
         public async Task<RegisterResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-                throw new ArgumentException("Email/Password is required.");
-
-            var exists = await _users.EmailExistsAsync(request.Email, cancellationToken);
-            if (exists) throw new InvalidOperationException("Email already exists.");
-
-            var user = new User
+            try
             {
-                Email = request.Email,
-                PasswordHash = _hasher.Hash(request.Password),
-                DisplayName = request.DisplayName,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+                if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+                    throw new ArgumentException("Email/Password is required.");
 
-            await _users.AddAsync(user, cancellationToken);
+                var exists = await _users.EmailExistsAsync(request.Email, cancellationToken);
+                if (exists) throw new InvalidOperationException("Email already exists.");
 
-            return new RegisterResponse
+                var now = DateTimeOffset.UtcNow;
+                var user = new User
+                {
+                    Email = request.Email,
+                    PasswordHash = _hasher.Hash(request.Password),
+                    DisplayName = $"{request.FirstName ?? string.Empty} {request.LastName ?? string.Empty}".Trim(),
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    Gender = request.Gender,
+                    IsActive = true,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                };
+                await _users.AddAsync(user, cancellationToken);
+                await _users.UpdateAsync(user, cancellationToken);
+
+                var guidRoleUser = await _roles.GetByNameAsync("User", cancellationToken);
+                var userRoles = new UserRoles
+                {
+                    UserId = user.Id,
+                    RoleId = guidRoleUser.Id
+                };
+                await _userRoles.AddAsync(userRoles, cancellationToken);
+
+                return new RegisterResponse
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    DisplayName = user.DisplayName,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Gender = user.Gender
+                };
+            }
+            catch (Exception ex)
             {
-                Id = user.Id,
-                Email = user.Email,
-                DisplayName = user.DisplayName
-            };
+                throw new Exception(ex.Message);
+            }
         }
     }
 }
