@@ -1,5 +1,7 @@
-﻿using Domain.Entities;
+﻿using Application.Auth;
+using Domain.Entities;
 using Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
@@ -11,6 +13,15 @@ namespace Infrastructure.Repositories
         {
             _db.UserRoles.Add(user);
             await _db.SaveChangesAsync(ct);
+        }
+        public async Task<User?> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
+        {
+            return await _db.Users
+                .AsNoTracking()
+                .AsSplitQuery()
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.Id == userId, ct);
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Domain.Entities;
-using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure
@@ -54,11 +53,6 @@ namespace Infrastructure
                     .HasColumnType("text")
                     .IsRequired();
 
-                // display_name text null
-                e.Property(x => x.DisplayName)
-                    .HasColumnName("display_name")
-                    .HasColumnType("text");
-
                 // is_active boolean not null default true
                 e.Property(x => x.IsActive)
                     .HasColumnName("is_active")
@@ -88,31 +82,6 @@ namespace Infrastructure
                 e.Property(x => x.UpdatedBy)
                     .HasColumnName("updated_by")
                     .HasColumnType("uuid");
-
-                // first_name / last_name text null
-                e.Property(x => x.FirstName)
-                    .HasColumnName("first_name")
-                    .HasColumnType("text");
-
-                e.Property(x => x.LastName)
-                    .HasColumnName("last_name")
-                    .HasColumnType("text");
-
-                // gender text null + CHECK ('male'|'female')
-                // ถ้าใน entity เป็น string?
-                e.Property(x => x.Gender)
-                    .HasColumnName("gender")
-                    .HasColumnType("text")
-                    .HasConversion(
-                        v => v == null ? null : (v == Gender.Male ? "male" : "female"),   // enum -> string
-                        v => v == null ? null : (v == "male" ? Gender.Male : Gender.Female) // string -> enum
-                    );
-
-                // บันทึกชื่อ CHECK constraint ให้ตรงกับฐานข้อมูล (เพื่อความสอดคล้อง)
-                e.ToTable(t => t.HasCheckConstraint(
-                    "users_gender_check",
-                    "gender = ANY (ARRAY['male'::text, 'female'::text])"
-                ));
             });
 
             // ---------- refresh_tokens ----------

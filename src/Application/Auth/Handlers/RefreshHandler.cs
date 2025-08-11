@@ -1,5 +1,6 @@
 ﻿using Application.Auth.Commands;
 using Application.Common.Results;
+using Domain.Entities;
 using Domain.Interfaces;
 using MediatR;
 using System.Security.Cryptography;
@@ -12,17 +13,20 @@ namespace Application.Auth.Handlers
         private readonly IRefreshTokenRepository _refreshRepo;
         private readonly IPasswordHasher _hasher;
         private readonly IJwtTokenGenerator _jwt;
+        private readonly IUserRolesRepository _userRoles;
 
         public RefreshHandler(
             IUserRepository users,
             IRefreshTokenRepository refreshRepo,
             IPasswordHasher hasher,
-            IJwtTokenGenerator jwt)
+            IJwtTokenGenerator jwt,
+            IUserRolesRepository userRoles)
         {
             _users = users;
             _refreshRepo = refreshRepo;
             _hasher = hasher;
             _jwt = jwt;
+            _userRoles = userRoles;
         }
 
         public async Task<Result<LoginResponse>> Handle(RefreshCommand req, CancellationToken ct)
@@ -45,8 +49,14 @@ namespace Application.Auth.Handlers
             // 3) ใช้สำเร็จ → revoke ตัวเดิม (rotation)
             await _refreshRepo.MarkRevokedAsync(matched.Id, DateTime.UtcNow, ct);
 
+            var userRoles = await _userRoles.GetByUserIdAsync(user.Id, ct);
+            var roleNames = userRoles.UserRoles
+                .Select(ur => ur.Role.Name)
+                .Distinct()
+                .ToList();
+
             // 4) ออก access token ใหม่
-            var access = _jwt.CreateToken(user, roles: null, minutes: 30);
+            var access = _jwt.CreateToken(user, roles: roleNames, minutes: 30);
 
             // 5) ออก refresh token ใหม่ + เก็บ hash
             var refreshPlain = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();

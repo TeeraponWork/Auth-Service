@@ -67,8 +67,7 @@ namespace Api.Controllers
             try
             {
                 var result = await _mediator.Send(new RegisterCommand
-                    (body.Email,body.Password,body.FirstName,body.LastName,body.Gender
-                    ), ct);
+                    (body.Email,body.Password,body.ConfirmPassword), ct);
                 return HandleResponse(result);
             }
             catch (Exception ex)

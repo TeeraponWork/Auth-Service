@@ -2,7 +2,6 @@
 using Application.Common.Results;
 using Domain.Interfaces;
 using MediatR;
-using System;
 using System.Security.Cryptography;
 
 namespace Application.Auth.Handlers
@@ -13,18 +12,21 @@ namespace Application.Auth.Handlers
         private readonly IJwtTokenGenerator _jwt;
         private readonly IPasswordHasher _hasher;
         private readonly IRefreshTokenRepository _refreshTokens;
+        private readonly IUserRolesRepository _userRoles;
 
         public LoginHandler(
             IUserRepository users,
             IJwtTokenGenerator jwt,
             IPasswordHasher hasher,
-            IRefreshTokenRepository refreshTokens
+            IRefreshTokenRepository refreshTokens,
+            IUserRolesRepository userRoles
             )
         {
             _users = users;
             _jwt = jwt;
             _hasher = hasher;
             _refreshTokens = refreshTokens;
+            _userRoles = userRoles;
         }
 
         public async Task<Result<LoginResponse>> Handle(LoginCommand request, CancellationToken ct)
@@ -36,8 +38,14 @@ namespace Application.Auth.Handlers
             if (!_hasher.Verify(request.Password, user.PasswordHash))
                 throw new UnauthorizedAccessException("Invalid credentials.");
 
-            // 1) ออก access token
-            var access = _jwt.CreateToken(user, roles: null, minutes: 30);
+            var userRoles = await _userRoles.GetByUserIdAsync(user.Id, ct);
+            var roleNames = userRoles.UserRoles
+                .Select(ur => ur.Role.Name)
+                .Distinct()
+                .ToList();
+
+            // ออก access token พร้อม roles
+            var access = _jwt.CreateToken(user, roles: roleNames, minutes: 30);
 
             // 2) สร้าง refresh token (plain) + hash
             var refreshPlain = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
@@ -56,7 +64,8 @@ namespace Application.Auth.Handlers
             var result = new LoginResponse
             {
                 AccessToken = access,
-                RefreshToken = refreshPlain
+                RefreshToken = refreshPlain,
+                User = user.Id
             };
 
             return Result<LoginResponse>.Success(result);

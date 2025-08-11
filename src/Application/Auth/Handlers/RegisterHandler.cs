@@ -2,6 +2,7 @@
 using Domain.Entities;
 using Domain.Interfaces;
 using MediatR;
+using System.ComponentModel.DataAnnotations;
 
 namespace Application.Auth.Handlers
 {
@@ -27,8 +28,12 @@ namespace Application.Auth.Handlers
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+                if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password) ||
+                    string.IsNullOrWhiteSpace(request.ConfirmPassword))
                     throw new ArgumentException("Email/Password is required.");
+
+                if(request.ConfirmPassword != request.Password)
+                    throw new ValidationException("Password and confirmation do not match.");
 
                 var exists = await _users.EmailExistsAsync(request.Email, cancellationToken);
                 if (exists) throw new InvalidOperationException("Email already exists.");
@@ -38,10 +43,6 @@ namespace Application.Auth.Handlers
                 {
                     Email = request.Email,
                     PasswordHash = _hasher.Hash(request.Password),
-                    DisplayName = $"{request.FirstName ?? string.Empty} {request.LastName ?? string.Empty}".Trim(),
-                    FirstName = request.FirstName,
-                    LastName = request.LastName,
-                    Gender = request.Gender,
                     IsActive = true,
                     CreatedAt = now,
                     UpdatedAt = now,
@@ -61,10 +62,6 @@ namespace Application.Auth.Handlers
                 {
                     Id = user.Id,
                     Email = user.Email,
-                    DisplayName = user.DisplayName,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    Gender = user.Gender
                 };
             }
             catch (Exception ex)

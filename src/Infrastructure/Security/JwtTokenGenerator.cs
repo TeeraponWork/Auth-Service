@@ -21,12 +21,13 @@ namespace Infrastructure.Security
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new List<Claim>
-        {
-            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new(JwtRegisteredClaimNames.Email, user.Email),
-            new("name", user.DisplayName ?? string.Empty)
-        };
-            if (roles != null) claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
+            {
+                new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+            };
+
+            if (roles != null)
+                claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
 
             var token = new JwtSecurityToken(
                 issuer: issuer,
@@ -35,6 +36,7 @@ namespace Infrastructure.Security
                 expires: DateTime.UtcNow.AddMinutes(minutes),
                 signingCredentials: creds
             );
+
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
