@@ -1,4 +1,5 @@
 ﻿using Application.Auth.Commands;
+using Application.Common.Results;
 using Domain.Entities;
 using Domain.Interfaces;
 using MediatR;
@@ -6,7 +7,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Application.Auth.Handlers
 {
-    public sealed class RegisterHandler : IRequestHandler<RegisterCommand, RegisterResponse>
+    public sealed class RegisterHandler : IRequestHandler<RegisterCommand, Result<RegisterResponse>>
     {
         private readonly IUserRepository _users;
         private readonly IPasswordHasher _hasher;
@@ -24,7 +25,7 @@ namespace Application.Auth.Handlers
             _userRoles = userRoles;
         }
 
-        public async Task<RegisterResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
+        public async Task<Result<RegisterResponse>> Handle(RegisterCommand request, CancellationToken cancellationToken)
         {
             try
             {
@@ -58,11 +59,13 @@ namespace Application.Auth.Handlers
                 };
                 await _userRoles.AddAsync(userRoles, cancellationToken);
 
-                return new RegisterResponse
+                var result = new RegisterResponse
                 {
                     Id = user.Id,
                     Email = user.Email,
                 };
+
+                return Result<RegisterResponse>.Success(result);
             }
             catch (Exception ex)
             {

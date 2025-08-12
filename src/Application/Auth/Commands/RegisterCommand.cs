@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using Application.Common.Results;
+using MediatR;
 
 namespace Application.Auth.Commands
 {
@@ -6,5 +7,5 @@ namespace Application.Auth.Commands
     string Email,
     string Password,
     string ConfirmPassword
-    ) : IRequest<RegisterResponse>;
+    ) : IRequest<Result<RegisterResponse>>;
 }
